@@ -1,6 +1,8 @@
 const express = require('express');
 const usuarioRouter = express.Router();
 const db = require('../db.js')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 
 module.exports = usuarioRouter;
@@ -8,6 +10,26 @@ module.exports = usuarioRouter;
 usuarioRouter.get('/usuario', (req, res) => {
     res.status(200).json({ mensagem: 'Rota de usuario' })
 })
+
+
+usuarioRouter.post('/cadastro', async (req, res) => {
+    const { nome, email, senha } = req.body
+    if (!email || !nome || !senha) {
+        return res.status(400).json({ mensagem: 'Nome,email e senha são obrigatorios!' })
+    }
+    try {
+        const hash = await bcrypt.hash(senha, 10);
+        await db('usuarios').insert({ nome, email, senha: hash });
+        res.status(201).json({ message: 'Usuário inserido com sucesso!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erro ao inserir usuário' });
+    }
+
+})
+
+usuarioRouter.post('/login')
+
 
 usuarioRouter.post('/usuario', async (req, res) => {
     const { nome, email } = req.body;
@@ -36,13 +58,13 @@ usuarioRouter.patch('/usuario/:id', async (req, res) => {
     try {
         const result = await db('usuarios').where({ id }).update({ nome, email });
         if (result) {
-            return res.status(200).json({ message: 'usuário atualizado com sucesso!' })
+            return res.status(200).json({ messagem: 'usuário atualizado com sucesso!' })
         } else {
-            return res.status(404).json({ message: 'usuário não encontrado!' })
+            return res.status(404).json({ messagem: 'usuário não encontrado!' })
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Erro ao atualizar usuário' });
+        res.status(500).json({ messagem: 'Erro ao atualizar usuário' });
     }
 })
 
